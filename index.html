@@ -255,6 +255,49 @@
     .results h2 { margin: 8px 0 10px; font-size: clamp(1.8rem, 5vw, 2.5rem); }
     .result-score { color: var(--purple-dark); font-size: 2.2rem; font-weight: 900; }
     .result-message { margin: 10px auto 28px; color: var(--muted); line-height: 1.7; }
+    .review {
+      margin: 28px 0;
+      text-align: left;
+    }
+    .review h3 {
+      margin: 0 0 14px;
+      color: var(--purple-dark);
+      font-size: 1.2rem;
+    }
+    .review-list {
+      display: grid;
+      gap: 12px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+    .review-item {
+      padding: 16px;
+      border: 2px solid #d7d4e4;
+      border-radius: 15px;
+      background: #fff;
+    }
+    .review-item.correct { border-color: var(--green); background: #e3faf2; }
+    .review-item.incorrect { border-color: var(--red); background: #fff0f2; }
+    .review-question {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 900;
+    }
+    .review-status {
+      display: inline-block;
+      margin-bottom: 8px;
+      font-size: .88rem;
+      font-weight: 900;
+    }
+    .review-item.correct .review-status { color: var(--green); }
+    .review-item.incorrect .review-status { color: var(--red); }
+    .review-answer, .review-explanation {
+      margin: 5px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .review-answer strong, .review-explanation strong { color: var(--ink); }
     .restart {
       padding: 14px 24px;
       border: 0;
@@ -321,6 +364,10 @@
           <h2>탐험 완료!</h2>
           <div id="result-score" class="result-score"></div>
           <p id="result-message" class="result-message"></p>
+          <section class="review" aria-labelledby="review-title">
+            <h3 id="review-title">나의 탐험 기록</h3>
+            <ol id="review-list" class="review-list"></ol>
+          </section>
           <button id="restart" class="restart" type="button">다시 도전하기</button>
         </div>
       </div>
@@ -366,11 +413,13 @@
     const nextButton = document.getElementById("next");
     const resultScore = document.getElementById("result-score");
     const resultMessage = document.getElementById("result-message");
+    const reviewList = document.getElementById("review-list");
     const restartButton = document.getElementById("restart");
     const letters = ["가", "나", "다", "라"];
 
     let currentQuestion = 0;
     let score = 0;
+    let selectedAnswers = Array(questions.length).fill(null);
 
     function renderQuestion() {
       const item = questions[currentQuestion];
@@ -400,6 +449,7 @@
     function selectAnswer(selectedButton, selectedIndex) {
       const item = questions[currentQuestion];
       const answerButtons = answersElement.querySelectorAll(".answer");
+      selectedAnswers[currentQuestion] = selectedIndex;
       answerButtons.forEach((button) => { button.disabled = true; });
       if (selectedIndex === item.correct) {
         score++;
@@ -417,6 +467,42 @@
       nextButton.focus();
     }
 
+    function renderReview() {
+      reviewList.replaceChildren();
+      questions.forEach((item, index) => {
+        const selectedIndex = selectedAnswers[index];
+        const isCorrect = selectedIndex === item.correct;
+        const reviewItem = document.createElement("li");
+        reviewItem.className = `review-item ${isCorrect ? "correct" : "incorrect"}`;
+
+        const question = document.createElement("span");
+        question.className = "review-question";
+        question.textContent = `${index + 1}. ${item.question}`;
+
+        const status = document.createElement("span");
+        status.className = "review-status";
+        status.textContent = isCorrect ? "정답" : "오답";
+
+        const chosenAnswer = document.createElement("p");
+        chosenAnswer.className = "review-answer";
+        chosenAnswer.innerHTML = "<strong>내가 고른 답:</strong> ";
+        chosenAnswer.append(selectedIndex === null ? "선택하지 않음" : item.answers[selectedIndex]);
+
+        const correctAnswer = document.createElement("p");
+        correctAnswer.className = "review-answer";
+        correctAnswer.innerHTML = "<strong>정답:</strong> ";
+        correctAnswer.append(item.answers[item.correct]);
+
+        const explanation = document.createElement("p");
+        explanation.className = "review-explanation";
+        explanation.innerHTML = "<strong>해설:</strong> ";
+        explanation.append(item.explanation);
+
+        reviewItem.append(question, status, chosenAnswer, correctAnswer, explanation);
+        reviewList.appendChild(reviewItem);
+      });
+    }
+
     function showResults() {
       quiz.hidden = true;
       results.hidden = false;
@@ -429,6 +515,7 @@
           : ratio >= .4
             ? "좋은 출발이에요! 다시 도전하면 더 많은 별을 발견할 수 있어요."
             : "탐험은 이제 시작이에요. 한 번 더 도전하며 우주를 알아가 봐요!";
+      renderReview();
       restartButton.focus();
     }
 
@@ -445,6 +532,8 @@
     restartButton.addEventListener("click", () => {
       currentQuestion = 0;
       score = 0;
+      selectedAnswers = Array(questions.length).fill(null);
+      reviewList.replaceChildren();
       results.hidden = true;
       quiz.hidden = false;
       renderQuestion();
