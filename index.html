@@ -101,6 +101,68 @@
 
     .content { position: relative; z-index: 1; }
 
+    .start-screen {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .start-screen[hidden] { display: none; }
+    .start-screen h2 { margin: 0 0 10px; font-size: clamp(1.7rem, 5vw, 2.4rem); }
+    .start-screen p { margin: 0 0 24px; color: var(--muted); line-height: 1.6; }
+    .topic-options {
+      display: grid;
+      gap: 12px;
+      padding: 0;
+      border: 0;
+    }
+    .topic-options legend {
+      margin-bottom: 12px;
+      color: var(--purple-dark);
+      font-weight: 900;
+    }
+    .topic-option {
+      position: relative;
+    }
+    .topic-option input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+    .topic-option label {
+      display: block;
+      padding: 16px;
+      border: 2px solid #d7d4e4;
+      border-radius: 15px;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+    }
+    .topic-option label strong { display: block; margin-bottom: 4px; }
+    .topic-option label span { color: var(--muted); font-size: .92rem; }
+    .topic-option input:checked + label {
+      border-color: var(--purple);
+      background: var(--lavender);
+      box-shadow: 0 5px 0 #d9d2ff;
+    }
+    .topic-option input:focus-visible + label {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+    .start {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px 18px;
+      border: 0;
+      border-radius: 14px;
+      color: #fff;
+      background: var(--purple);
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .start:hover { background: var(--purple-dark); }
+    .start:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+
     .topline {
       display: flex;
       align-items: center;
@@ -308,6 +370,7 @@
       cursor: pointer;
     }
     .restart:hover { background: var(--purple-dark); }
+    .restart:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
 
     @keyframes pop {
       0% { transform: scale(1); }
@@ -342,28 +405,48 @@
 
     <section class="quiz-card" aria-label="우주 탐험 퀴즈">
       <div class="content">
+        <div id="start-screen" class="start-screen">
+          <h2>어떤 우주를 탐험할까요?</h2>
+          <p id="topic-help">관심 있는 주제를 골라 10문항 퀴즈를 시작해 보세요. 선택하지 않으면 천문학 기초로 시작합니다.</p>
+          <fieldset class="topic-options" aria-describedby="topic-help">
+            <legend>퀴즈 주제 선택</legend>
+            <div class="topic-option">
+              <input id="topic-basics" type="radio" name="topic" value="basics">
+              <label for="topic-basics"><strong>천문학 기초</strong><span>태양계와 우주의 기본 개념</span></label>
+            </div>
+            <div class="topic-option">
+              <input id="topic-planets" type="radio" name="topic" value="planets">
+              <label for="topic-planets"><strong>행성 탐험</strong><span>태양계 행성의 특징과 비밀</span></label>
+            </div>
+            <div class="topic-option">
+              <input id="topic-exploration" type="radio" name="topic" value="exploration">
+              <label for="topic-exploration"><strong>우주 탐사</strong><span>우주비행과 탐사 임무 이야기</span></label>
+            </div>
+          </fieldset>
+          <button id="start" class="start" type="button">퀴즈 시작하기</button>
+        </div>
         <div id="quiz" class="quiz">
           <div class="topline">
-            <span id="question-count" class="question-count">질문 1 / 10</span>
+            <span id="question-count" class="question-count" role="status" aria-live="polite">질문 1 / 10</span>
             <span id="score" class="score" aria-live="polite">점수 0점</span>
           </div>
-          <div class="progress-track" role="progressbar" aria-label="퀴즈 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10">
+          <div id="progress-track" class="progress-track" role="progressbar" aria-label="퀴즈 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10" aria-valuetext="질문 1 / 10">
             <div id="progress-bar" class="progress-bar"></div>
           </div>
 
-          <h2 id="question" class="question"></h2>
-          <fieldset id="answers" class="answers">
+          <h2 id="question" class="question" tabindex="-1"></h2>
+          <fieldset id="answers" class="answers" aria-labelledby="question">
             <legend class="sr-only">답을 선택하세요</legend>
           </fieldset>
           <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
           <button id="next" class="next" type="button" hidden>다음 질문</button>
         </div>
 
-        <div id="results" class="results" hidden>
+        <div id="results" class="results" aria-labelledby="results-title" hidden>
           <div class="trophy" aria-hidden="true">🌟</div>
-          <h2>탐험 완료!</h2>
-          <div id="result-score" class="result-score"></div>
-          <p id="result-message" class="result-message"></p>
+          <h2 id="results-title">탐험 완료!</h2>
+          <div id="result-score" class="result-score" aria-live="polite"></div>
+          <p id="result-message" class="result-message" aria-live="polite"></p>
           <section class="review" aria-labelledby="review-title">
             <h3 id="review-title">나의 탐험 기록</h3>
             <ol id="review-list" class="review-list"></ol>
@@ -389,18 +472,40 @@
   </style>
   <script>
     const questions = [
-      { question: "태양계에서 가장 큰 행성은 무엇일까요?", answers: ["지구", "목성", "토성", "해왕성"], correct: 1, explanation: "목성은 지구보다 지름이 약 11배나 큰 태양계의 거인이에요." },
-      { question: "지구의 위성 이름은 무엇인가요?", answers: ["달", "포보스", "유로파", "타이탄"], correct: 0, explanation: "달은 지구 주위를 도는 유일한 자연 위성이에요." },
-      { question: "빛이 태양에서 지구까지 오는 데 걸리는 시간은 약 얼마일까요?", answers: ["8분", "8시간", "8일", "8초"], correct: 0, explanation: "태양빛은 약 1억 5천만 km를 8분 20초 만에 건너와요." },
-      { question: "붉은색 때문에 ‘붉은 행성’이라고 불리는 행성은?", answers: ["금성", "수성", "화성", "천왕성"], correct: 2, explanation: "화성 표면의 철 성분이 산화되어 붉게 보인답니다." },
-      { question: "우주에서 소리가 잘 들리지 않는 가장 큰 이유는 무엇일까요?", answers: ["너무 어두워서", "공기가 거의 없어서", "별이 너무 멀어서", "중력이 약해서"], correct: 1, explanation: "소리는 공기 같은 매질의 진동으로 전달되는데, 우주는 거의 진공이에요." },
-      { question: "우주비행사가 우주에서 떠다니는 것처럼 보이는 이유는?", answers: ["투명한 바닥이라서", "초고속으로 움직여서", "미세중력 상태라서", "우주복이 가벼워서"], correct: 2, explanation: "우주선 안에서는 중력이 거의 없는 미세중력 상태를 경험해요." },
-      { question: "태양은 어떤 천체에 해당하나요?", answers: ["행성", "위성", "혜성", "항성"], correct: 3, explanation: "태양은 스스로 빛과 열을 내는 거대한 항성이에요." },
-      { question: "토성의 가장 눈에 띄는 특징은 무엇인가요?", answers: ["푸른 대기", "거대한 고리", "두 개의 달", "화산 바다"], correct: 1, explanation: "토성은 얼음과 암석 조각으로 이루어진 아름다운 고리를 가지고 있어요." },
-      { question: "국제우주정거장(ISS)은 무엇을 위한 곳인가요?", answers: ["우주 연구실", "화성 착륙선", "달의 관측소", "태양 발전소"], correct: 0, explanation: "ISS는 여러 나라의 우주비행사가 함께 연구하는 궤도 실험실이에요." },
-      { question: "우리 태양계가 속한 은하의 이름은 무엇인가요?", answers: ["안드로메다 은하", "소용돌이 은하", "우리은하", "솜브레로 은하"], correct: 2, explanation: "태양계는 수천억 개의 별이 있는 우리은하에 자리하고 있어요." }
+      { topic: "basics", question: "태양계에서 가장 큰 행성은 무엇일까요?", answers: ["지구", "목성", "토성", "해왕성"], correct: 1, explanation: "목성은 지구보다 지름이 약 11배나 큰 태양계의 거인이에요." },
+      { topic: "basics", question: "지구의 위성 이름은 무엇인가요?", answers: ["달", "포보스", "유로파", "타이탄"], correct: 0, explanation: "달은 지구 주위를 도는 유일한 자연 위성이에요." },
+      { topic: "basics", question: "빛이 태양에서 지구까지 오는 데 걸리는 시간은 약 얼마일까요?", answers: ["8분", "8시간", "8일", "8초"], correct: 0, explanation: "태양빛은 약 1억 5천만 km를 8분 20초 만에 건너와요." },
+      { topic: "basics", question: "붉은색 때문에 ‘붉은 행성’이라고 불리는 행성은?", answers: ["금성", "수성", "화성", "천왕성"], correct: 2, explanation: "화성 표면의 철 성분이 산화되어 붉게 보인답니다." },
+      { topic: "basics", question: "우주에서 소리가 잘 들리지 않는 가장 큰 이유는 무엇일까요?", answers: ["너무 어두워서", "공기가 거의 없어서", "별이 너무 멀어서", "중력이 약해서"], correct: 1, explanation: "소리는 공기 같은 매질의 진동으로 전달되는데, 우주는 거의 진공이에요." },
+      { topic: "basics", question: "우주비행사가 우주에서 떠다니는 것처럼 보이는 이유는?", answers: ["투명한 바닥이라서", "초고속으로 움직여서", "미세중력 상태라서", "우주복이 가벼워서"], correct: 2, explanation: "우주선 안에서는 중력이 거의 없는 미세중력 상태를 경험해요." },
+      { topic: "basics", question: "태양은 어떤 천체에 해당하나요?", answers: ["행성", "위성", "혜성", "항성"], correct: 3, explanation: "태양은 스스로 빛과 열을 내는 거대한 항성이에요." },
+      { topic: "basics", question: "토성의 가장 눈에 띄는 특징은 무엇인가요?", answers: ["푸른 대기", "거대한 고리", "두 개의 달", "화산 바다"], correct: 1, explanation: "토성은 얼음과 암석 조각으로 이루어진 아름다운 고리를 가지고 있어요." },
+      { topic: "basics", question: "국제우주정거장(ISS)은 무엇을 위한 곳인가요?", answers: ["우주 연구실", "화성 착륙선", "달의 관측소", "태양 발전소"], correct: 0, explanation: "ISS는 여러 나라의 우주비행사가 함께 연구하는 궤도 실험실이에요." },
+      { topic: "basics", question: "우리 태양계가 속한 은하의 이름은 무엇인가요?", answers: ["안드로메다 은하", "소용돌이 은하", "우리은하", "솜브레로 은하"], correct: 2, explanation: "태양계는 수천억 개의 별이 있는 우리은하에 자리하고 있어요." },
+      { topic: "planets", question: "태양에 가장 가까운 행성은 무엇인가요?", answers: ["금성", "수성", "지구", "화성"], correct: 1, explanation: "수성은 태양과 가장 가까운 궤도를 도는 행성이에요." },
+      { topic: "planets", question: "태양계에서 가장 뜨거운 행성은 무엇인가요?", answers: ["수성", "금성", "화성", "목성"], correct: 1, explanation: "금성은 두꺼운 이산화탄소 대기 때문에 강한 온실효과가 일어나 가장 뜨거워요." },
+      { topic: "planets", question: "지구가 태양을 한 바퀴 도는 데 걸리는 시간은?", answers: ["약 하루", "약 한 달", "약 1년", "약 10년"], correct: 2, explanation: "지구의 공전 주기는 약 365일, 즉 1년이에요." },
+      { topic: "planets", question: "화성의 표면에 있는 거대한 화산은 무엇인가요?", answers: ["올림푸스산", "에베레스트산", "마우나케아", "킬리만자로"], correct: 0, explanation: "올림푸스산은 태양계에서 가장 큰 화산으로 알려져 있어요." },
+      { topic: "planets", question: "천왕성이 옆으로 누운 듯 자전하는 이유로 가장 알맞은 것은?", answers: ["강한 바람 때문", "큰 충돌 때문", "고리가 무거워서", "태양열 때문"], correct: 1, explanation: "과거 거대한 천체와의 충돌이 천왕성의 자전축을 크게 기울였다고 추정해요." },
+      { topic: "planets", question: "해왕성의 푸른색을 만드는 대기 성분은 무엇인가요?", answers: ["산소", "질소", "메탄", "수소"], correct: 2, explanation: "해왕성 대기의 메탄이 붉은빛을 흡수해 푸르게 보이게 해요." },
+      { topic: "planets", question: "왜소행성으로 분류된 천체는 무엇인가요?", answers: ["세레스", "유로파", "이오", "트리톤"], correct: 0, explanation: "세레스는 소행성대에 있는 왜소행성이에요." },
+      { topic: "planets", question: "지구의 계절이 생기는 주된 이유는 무엇인가요?", answers: ["지구와 달의 거리", "지구 자전축의 기울기", "태양의 크기 변화", "구름의 이동"], correct: 1, explanation: "지구 자전축이 기울어진 채 태양 주위를 공전해 계절이 바뀌어요." },
+      { topic: "planets", question: "목성의 대기에서 볼 수 있는 거대한 붉은 소용돌이는?", answers: ["붉은 대적점", "태풍의 눈", "화성의 그림자", "태양의 홍염"], correct: 0, explanation: "대적점은 수백 년 동안 지속된 거대한 폭풍으로 알려져 있어요." },
+      { topic: "planets", question: "지구와 크기와 질량이 비슷해 ‘쌍둥이 행성’으로 불리는 행성은?", answers: ["금성", "화성", "목성", "해왕성"], correct: 0, explanation: "금성은 지구와 크기와 질량이 비슷하지만 환경은 매우 달라요." },
+      { topic: "exploration", question: "인류가 처음으로 달에 착륙한 아폴로 임무는 무엇인가요?", answers: ["아폴로 8호", "아폴로 11호", "아폴로 13호", "아폴로 17호"], correct: 1, explanation: "아폴로 11호의 닐 암스트롱과 버즈 올드린이 인류 최초로 달에 착륙했어요." },
+      { topic: "exploration", question: "로켓이 우주로 날아갈 수 있게 하는 힘은 무엇인가요?", answers: ["부력", "추력", "자력", "마찰력"], correct: 1, explanation: "로켓 엔진이 가스를 아래로 내뿜을 때 반작용으로 추력이 생겨요." },
+      { topic: "exploration", question: "우주비행사가 우주선 밖에서 활동할 때 입는 장비는?", answers: ["잠수복", "선외 우주복", "방탄복", "활공복"], correct: 1, explanation: "선외 우주복은 산소와 압력, 체온을 유지해 우주비행사를 보호해요." },
+      { topic: "exploration", question: "화성 표면을 돌아다니며 탐사하는 로봇을 무엇이라고 하나요?", answers: ["로버", "셔틀", "궤도선", "착륙 풍선"], correct: 0, explanation: "로버는 바퀴로 화성 표면을 이동하며 암석과 환경을 조사해요." },
+      { topic: "exploration", question: "우주 망원경을 지구 대기권 밖에 설치하는 가장 큰 이유는?", answers: ["더 빨리 움직이려고", "대기의 방해를 줄이려고", "연료를 아끼려고", "소리를 듣기 위해"], correct: 1, explanation: "대기가 빛을 흔들거나 흡수하는 영향을 줄이면 더 선명하게 관측할 수 있어요." },
+      { topic: "exploration", question: "국제우주정거장(ISS)이 주로 도는 곳은 어디인가요?", answers: ["지구 저궤도", "달 표면", "화성 궤도", "태양 표면"], correct: 0, explanation: "ISS는 지구에서 수백 km 높이의 저궤도를 돌고 있어요." },
+      { topic: "exploration", question: "우주선이 지구 궤도에 진입할 때 필요한 속도를 무엇이라고 하나요?", answers: ["탈출 속도", "궤도 속도", "음속", "자전 속도"], correct: 1, explanation: "궤도 속도에 도달하면 지구로 떨어지면서도 지구를 계속 돌 수 있어요." },
+      { topic: "exploration", question: "보이저 탐사선이 주로 탐사한 행성 영역은 어디인가요?", answers: ["태양계 외곽의 거대 행성", "수성 표면", "달의 뒷면", "태양의 중심"], correct: 0, explanation: "보이저호는 목성, 토성 등 태양계 외곽의 거대 행성을 가까이서 탐사했어요." },
+      { topic: "exploration", question: "우주 탐사선이 지구로 자료를 보내는 데 사용하는 것은?", answers: ["전파 통신", "해류", "빛의 반사판", "소리의 울림"], correct: 0, explanation: "탐사선은 전파를 이용해 사진과 측정 자료를 지구로 전송해요." },
+      { topic: "exploration", question: "우주 발사체의 여러 단을 분리하는 주된 이유는?", answers: ["무게를 줄이기 위해", "색을 바꾸기 위해", "소리를 줄이기 위해", "방향을 숨기기 위해"], correct: 0, explanation: "연료를 다 쓴 단을 버리면 발사체가 더 가벼워져 남은 연료를 효율적으로 사용할 수 있어요." }
     ];
 
+    const startScreen = document.getElementById("start-screen");
+    const startButton = document.getElementById("start");
     const quiz = document.getElementById("quiz");
     const results = document.getElementById("results");
     const questionCount = document.getElementById("question-count");
@@ -417,22 +522,30 @@
     const restartButton = document.getElementById("restart");
     const letters = ["가", "나", "다", "라"];
 
+    const topicNames = {
+      basics: "천문학 기초",
+      planets: "행성 탐험",
+      exploration: "우주 탐사"
+    };
+    let activeTopic = "basics";
+    let activeQuestions = questions.filter((item) => item.topic === activeTopic);
     let currentQuestion = 0;
     let score = 0;
-    let selectedAnswers = Array(questions.length).fill(null);
+    let selectedAnswers = Array(activeQuestions.length).fill(null);
 
     function renderQuestion() {
-      const item = questions[currentQuestion];
-      const percent = ((currentQuestion + 1) / questions.length) * 100;
-      questionCount.textContent = `질문 ${currentQuestion + 1} / ${questions.length}`;
+      const item = activeQuestions[currentQuestion];
+      const percent = ((currentQuestion + 1) / activeQuestions.length) * 100;
+      questionCount.textContent = `${topicNames[activeTopic]} · 질문 ${currentQuestion + 1} / ${activeQuestions.length}`;
       scoreElement.textContent = `점수 ${score}점`;
       progressBar.style.width = `${percent}%`;
       progressTrack.setAttribute("aria-valuenow", percent);
+      progressTrack.setAttribute("aria-valuetext", `질문 ${currentQuestion + 1} / ${activeQuestions.length}`);
       questionElement.textContent = item.question;
       feedbackElement.textContent = "";
       feedbackElement.className = "feedback";
       nextButton.hidden = true;
-      nextButton.textContent = currentQuestion === questions.length - 1 ? "결과 확인하기" : "다음 질문";
+      nextButton.textContent = currentQuestion === activeQuestions.length - 1 ? "결과 확인하기" : "다음 질문";
       answersElement.innerHTML = '<legend class="sr-only">답을 선택하세요</legend>';
 
       item.answers.forEach((answer, index) => {
@@ -447,7 +560,7 @@
     }
 
     function selectAnswer(selectedButton, selectedIndex) {
-      const item = questions[currentQuestion];
+      const item = activeQuestions[currentQuestion];
       const answerButtons = answersElement.querySelectorAll(".answer");
       selectedAnswers[currentQuestion] = selectedIndex;
       answerButtons.forEach((button) => { button.disabled = true; });
@@ -469,7 +582,7 @@
 
     function renderReview() {
       reviewList.replaceChildren();
-      questions.forEach((item, index) => {
+      activeQuestions.forEach((item, index) => {
         const selectedIndex = selectedAnswers[index];
         const isCorrect = selectedIndex === item.correct;
         const reviewItem = document.createElement("li");
@@ -506,8 +619,8 @@
     function showResults() {
       quiz.hidden = true;
       results.hidden = false;
-      const ratio = score / questions.length;
-      resultScore.textContent = `${questions.length}문제 중 ${score}문제 정답`;
+      const ratio = score / activeQuestions.length;
+      resultScore.textContent = `${topicNames[activeTopic]} · ${activeQuestions.length}문제 중 ${score}문제 정답`;
       resultMessage.textContent = ratio === 1
         ? "완벽한 우주 탐험이었어요! 별빛 탐험대의 전설이 되셨네요."
         : ratio >= .7
@@ -520,7 +633,7 @@
     }
 
     nextButton.addEventListener("click", () => {
-      if (currentQuestion === questions.length - 1) {
+      if (currentQuestion === activeQuestions.length - 1) {
         showResults();
         return;
       }
@@ -529,10 +642,24 @@
       questionElement.focus();
     });
 
+    startButton.addEventListener("click", () => {
+      const selectedTopic = document.querySelector('input[name="topic"]:checked');
+      activeTopic = selectedTopic ? selectedTopic.value : "basics";
+      activeQuestions = questions.filter((item) => item.topic === activeTopic);
+      currentQuestion = 0;
+      score = 0;
+      selectedAnswers = Array(activeQuestions.length).fill(null);
+      startScreen.hidden = true;
+      results.hidden = true;
+      quiz.hidden = false;
+      renderQuestion();
+      questionElement.focus();
+    });
+
     restartButton.addEventListener("click", () => {
       currentQuestion = 0;
       score = 0;
-      selectedAnswers = Array(questions.length).fill(null);
+      selectedAnswers = Array(activeQuestions.length).fill(null);
       reviewList.replaceChildren();
       results.hidden = true;
       quiz.hidden = false;
@@ -540,8 +667,8 @@
       questionElement.focus();
     });
 
-    questionElement.setAttribute("tabindex", "-1");
-    renderQuestion();
+    quiz.hidden = true;
+    results.hidden = true;
   </script>
 </body>
 </html>
